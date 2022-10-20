@@ -1,8 +1,22 @@
 """Example bot which execute python expression and returns a local execution environment which is enough to teach the concept"""
 
 from flask import Flask, request, json
+import traceback, sys, io
 
 app = Flask(__name__)
+
+
+def _exec(code):
+    old_stdout, old_stderr = sys.stdout, sys.stderr
+    sys.stdout, sys.stderr = io.StringIO(), io.StringIO()
+    stdout, stderr, exc = "", "", ""
+    try:
+        exec(code.strip())
+    except Exception:
+        exc = traceback.format_exc()
+    stdout, stderr = sys.stdout.getvalue(), sys.stderr.getvalue()
+    sys.stdout, sys.stderr = old_stdout, old_stderr
+    return exc.strip() or stderr.strip() or stdout.strip() or "Success"
 
 
 @app.route('/', methods=['POST'])
@@ -18,10 +32,6 @@ def on_event():
     elif event['type'] == 'MESSAGE':
         if event['message']['text'].startswith('@python exec'):
             message = event['message']['text'].split('@python exec')
-            cls = {}
-            expr = message[1][1:]
-            #exec(object, globals, locals)
-            exec(str(expr),globals(),cls)
-            text = f"```{cls}```"
+            text = f"```{_exec(message[1][1:])}```"
 
     return json.jsonify({'text': text})
