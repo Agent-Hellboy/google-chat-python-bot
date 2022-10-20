@@ -1,12 +1,14 @@
 """Example bot which execute python expression and returns a local execution environment which is enough to teach the concept"""
 
 from flask import Flask, request, json
-import traceback, sys, io
+import traceback
+import sys
+import io
 
 app = Flask(__name__)
 
 
-def _exec(code):
+def _exec(code: str) -> str:
     old_stdout, old_stderr = sys.stdout, sys.stderr
     sys.stdout, sys.stderr = io.StringIO(), io.StringIO()
     stdout, stderr, exc = "", "", ""
@@ -25,10 +27,10 @@ def on_event():
     event = request.get_json()
     if event['type'] == 'ADDED_TO_SPACE':
         text = f"Thanks for adding me to {event['space']['displayName']}!"
-    
+
     elif event['type'] == 'REMOVED_FROM_SPACE':
         text = f"Bye Bye,nice tille stay at {event['space']['displayName']}!"
-    
+
     elif event['type'] == 'MESSAGE':
         if event['message']['text'].startswith('@python exec'):
             message = event['message']['text'].split('@python exec')
